@@ -1,0 +1,55 @@
+﻿@page "/customers"
+@using Supabase.Postgrest.Models
+<div>
+<h3>Customers</h3>
+<div>
+
+</div>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>name</th>
+                <th>surname</th>
+                <th>birth date</th>
+                <th>phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(Customer can in canvases)
+            {
+                <tr>
+                    <td><input value=@can.Id /></td>
+                    <td><input value=@can.Name/></td>
+                    <td><input value=@can.Surname /></td>
+                    <td><InputDate @bind-Value="can.BirthDate" /></td>
+                    <td><input value=@can.Phone type="number" /></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    static string url = "https://mobtzmkfspmdhsjmgzus.supabase.co";
+    private const string V = "canvas";
+    static string key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vYnR6bWtmc3BtZGhzam1nenVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQwMzg3OTUsImV4cCI6MjAyOTYxNDc5NX0.n5E7w3znUMpisOf6MaAFU3urNnjYSTm9vyV4NZehO44";
+    public List<Customer> canvases = new();
+    static Supabase.SupabaseOptions options = new Supabase.SupabaseOptions
+        {
+            AutoConnectRealtime = true
+        };
+
+    public Supabase.Client supabase = new Supabase.Client(url, key, options);
+    protected override async Task OnInitializedAsync()
+    {
+        await supabase.InitializeAsync();
+        getCanvas();
+    }
+    public async void getCanvas()
+    {
+        var data = await supabase.From<Customer>().Get();
+        canvases = data.Models;
+        StateHasChanged();
+    }
+}
