@@ -7,7 +7,7 @@ env:
 # Controls when the action will run
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 concurrency: 
   group: "pages"
@@ -24,7 +24,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.x.x
+        dotnet-version: 8.x.x
 
     - name: Publish application
       run: dotnet publish -c Release
