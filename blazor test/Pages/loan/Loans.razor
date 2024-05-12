@@ -1,0 +1,62 @@
+﻿@page "/loans"
+@using Supabase.Postgrest.Models
+<div>
+<h3>Loans</h3>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>car</th>
+                <th>customer</th>
+                <th>loan date</th>
+                <th>return date</th>
+                <th>save</th>
+                <th>delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Loan loan in loans)
+            {
+                <tr>
+                    <td><a href=@("loans/" + loan.Id)>@loan.Id</a></td>
+                    <td><a href=@("cars/" + loan.Car)> @loan.Car </a></td>
+                    <td><a href=@("customers/" + loan.Customer)> @loan.Customer </a></td>
+                    <td><InputDate @bind-Value="loan.LoanDate" /></td>
+                    <td><InputDate @bind-Value="loan.ReturnDate" /></td>
+                    <td><button class="btn btn-primary" onclick=@(() => loan.Update<Loan>())>Save</button></td>
+                    <td><button class="btn btn-danger" onclick=@(() => handleDelete(loan)) >delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+<a href="/loans/add">add new loan</a>
+</div>
+
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; }
+    
+    public List<Loan> loans = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        getLoans();
+    }
+
+    private async void getLoans()
+    {
+        var data = await supabaseGlobal.From<Loan>().Get();
+        loans = data.Models;
+        StateHasChanged();
+    }
+
+    private async void handleDelete(Loan loan)
+    {
+        await loan.Delete<Loan>();
+        getLoans();
+        StateHasChanged();
+    }
+
+
+}

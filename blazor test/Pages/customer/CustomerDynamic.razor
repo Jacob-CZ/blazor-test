@@ -1,0 +1,48 @@
+﻿@page "/customers/{id}"
+@using Supabase.Postgrest.Models
+
+<h1>@_customer.Surname</h1>
+<h1>@_customer.Name</h1>
+
+<select @bind=test id="dropdowntipo" >
+    <option value="" disabled selected>Select your option</option>
+    <option value="Exemplo1">Exemplo1</option>
+    <option value="Exemplo2">Exemplo2</option>
+    <option value="Exemplo3" >Exemplo3</option>
+</select>
+
+<p>@test</p>
+
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; }
+    [Parameter]
+    public string Id { get; set; }
+
+    private Customer _customer = new Customer();
+
+    private string test;
+
+    protected override async Task OnInitializedAsync()
+    {
+        getCustomer();
+    }
+
+    private async void logSelected(ChangeEventArgs e)
+    {
+        Console.WriteLine(e.Value);
+    }
+
+    private async void getCustomer()
+    {
+        var data = await supabaseGlobal.From<Customer>().Get();
+        var customer = data.Models.FirstOrDefault(c => c.Id == long.Parse(Id));
+        if (customer != null)
+        {
+            _customer = customer;
+        }
+        StateHasChanged();
+    }
+
+}

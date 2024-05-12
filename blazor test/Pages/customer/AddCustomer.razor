@@ -1,0 +1,42 @@
+﻿@page "/customers/add"
+@using Supabase.Postgrest.Models
+@inject NavigationManager NavManager
+
+<style>
+    .add-customer-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-top: 50px;
+        borde
+    }
+
+
+</style>
+
+<div class="add-customer-container">
+    <h3>add new customer</h3>
+    <label for="name">Name:</label>
+    <input type="text" @bind="newCustomer.Name" placeholder="name" />
+    <label for="surname">Surname:</label>
+    <input type="text" @bind="newCustomer.Surname" placeholder="surname" />
+    <label for="birthDate">Birth Date:</label>
+    <InputDate @bind-Value="newCustomer.BirthDate" />
+    <label for="phone">Phone:</label>
+    <input type="number" @bind="newCustomer.Phone" placeholder="phone" />
+    <button class="btn btn-primary" @onclick="addCustomer">Add</button>
+</div>
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; }
+
+    public Customer newCustomer = new();
+
+    public async void addCustomer()
+    {
+        await supabaseGlobal.From<Customer>().Insert(newCustomer);
+        newCustomer = new();
+        NavManager.NavigateTo("/customers");
+    }
+}

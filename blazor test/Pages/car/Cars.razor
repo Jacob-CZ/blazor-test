@@ -1,0 +1,81 @@
+﻿@page "/cars"
+@using Supabase.Postgrest.Models
+<PageTitle>Cars</PageTitle>
+<div>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>vin</th>
+                <th>plate</th>
+                <th>make</th>
+                <th>model</th>
+                <th>year</th>
+                <th>price per day</th>
+                <th>avilable</th>
+                <th>odometer</th>
+                <th>no of seats</th>
+                <th>save</th>
+                <th>delete</th>
+
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Car car in cars)
+            {
+                <tr>
+                    <td><a href=@("cars/" + car.Id)>@car.Id</a></td>
+                    <td><input @bind-value="car.Vin" type="number" /></td>
+                    <td><input @bind-value="car.Plate" /></td>
+                    <td><input @bind-value="car.Make" /></td>
+                    <td><input @bind-value="car.Model" /></td>
+                    <td><InputDate @bind-Value="car.Year" /> </td>
+                    <td><input @bind-value="car.Price" type="number" /></td>
+                    <td><p onclick=@(() => changeAvailable(car))>@car.Available</p></td>
+                    <td><input @bind-value="car.Odometer" type="number" /></td>
+                    <td><input @bind-value="car.NumberOfSeats" type="number" /></td>
+                    <td><button class="btn btn-primary" onclick=@(() => car.Update<Car>())>Save</button></td>
+                    <td><button class="btn btn-danger" onclick=@(() => handleDelete(car))>delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <a href="/cars/add">add new car</a>
+
+
+</div>
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; }
+
+    private List<Car> cars = new();
+    protected override async Task OnInitializedAsync()
+    {
+        getCars();
+    }
+        
+    private async void getCars()
+    {
+        var data = await supabaseGlobal.From<Car>().Get();
+        cars = data.Models;
+        StateHasChanged();
+    }
+
+    private async void handleDelete(Car car)
+    {
+        await car.Delete<Car>();
+        getCars();
+    }
+    private void handlecheck(Car car, ChangeEventArgs change)
+    {
+        Console.WriteLine(change.Value);
+        car.Available = !car.Available;
+    }
+    private void changeAvailable(Car car)
+    {
+        car.Available = !car.Available;
+        StateHasChanged();
+    }
+}

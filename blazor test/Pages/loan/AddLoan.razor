@@ -1,0 +1,71 @@
+﻿@page "/loans/add"
+@using Supabase.Postgrest.Models
+@inject NavigationManager NavManager
+
+<h3>AddLoan</h3>
+<div class="add">
+    <label for="car">Car:</label>
+    <select @bind="newLoan.Car">
+        <option disabled selected>Select a car</option>
+        @foreach (var car in cars)
+        {
+            <option value="@car.Id">@car.Make @car.Model</option>
+        }
+    </select>
+    <label for="customer">Customer:</label>
+    <select @bind="newLoan.Customer">
+        <option disabled selected>Select a customer</option>
+        @foreach (var customer in customers)
+        {
+            <option value="@customer.Id">@customer.Name @customer.Surname</option>
+        }
+    </select>
+    <label for="loanDate">Loan Date:</label>
+    <InputDate @bind-Value="newLoan.LoanDate" />
+    <label for="returnDate">Return Date:</label>
+    <InputDate @bind-Value="newLoan.ReturnDate" />
+    <button class="btn btn-primary" @onclick="addLoan">Add</button>
+</div>
+
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; }
+
+    private Loan newLoan = new();
+
+    private List<Car> cars = new();
+    private List<Customer> customers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        getCars();
+        getCustomers();
+        newLoan.LoanDate = DateOnly.Parse(DateTime.Today.ToLongDateString());
+        newLoan.ReturnDate = DateOnly.Parse(DateTime.Today.AddDays(1).ToLongDateString());
+    }
+
+    public async void getCustomers()
+    {
+        var data = await supabaseGlobal.From<Customer>().Get();
+        customers = data.Models;
+        StateHasChanged();
+    }
+
+    private async void getCars()
+    {
+        var data = await supabaseGlobal.From<Car>().Get();
+        cars = data.Models.Where(car => car.Available).ToList();
+        StateHasChanged();
+    }
+
+    private async void addLoan()
+    {
+        Console.WriteLine(newLoan.Car + " "+ newLoan.Customer);
+        Car auto = cars.Where(car => car.Id == newLoan.Car).First();
+        auto.Available = false;
+        await auto.Update<Car>();
+        await supabaseGlobal.From<Loan>().Insert(newLoan);
+        newLoan = new();
+        NavManager.NavigateTo("/loans");
+    }
+}

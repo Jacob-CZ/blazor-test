@@ -1,0 +1,89 @@
+﻿@page "/cars/{id}"
+@using Supabase.Postgrest.Models
+<style>
+    .image-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        flex-direction: column;
+    }
+    .carDynamic-main{
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+<div class="carDynamic-main">
+ <div>
+<h3>Car</h3>
+<p>Id: @Id</p>
+<p>Vin: @carr.Vin</p>
+<p>Plate: @carr.Plate</p>
+<p>Make: @carr.Make</p>
+<p>Model: @carr.Model</p>
+<p>Year: @carr.Year</p>
+<p>Price: @carr.Price</p>
+<p>Available: @carr.Available</p>
+<p>Odometer: @carr.Odometer</p>
+<p>Number of seats: @carr.NumberOfSeats</p>
+</div>
+<div class=" image-container">
+<InputFile  OnChange="HandleFileInput" accept=".webp" />
+<img src=@("https://mobtzmkfspmdhsjmgzus.supabase.co/storage/v1/object/public/images/" + Id + ".webp?" + Random) alt="Selected Image" />
+</div>
+</div>
+@code {
+    [CascadingParameter]
+    public Supabase.Client supabaseGlobal { get; set; }
+
+
+    [Parameter]
+    public string Id { get; set; }
+
+    public string Random { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        getCar();
+        GetImage();
+        Random = Guid.NewGuid().ToString();
+    }
+
+    Car carr = new Car();
+
+    private async void getCar()
+    {
+        var data = await supabaseGlobal.From<Car>().Get();
+        var car = data.Models.FirstOrDefault(c => c.Id == long.Parse(Id));
+        if (car != null)
+        {
+            carr = car;
+        }
+        StateHasChanged();
+    }
+
+    private async Task GetImage()
+    {
+        var response = await supabaseGlobal.Storage.From("images").List();
+        Console.WriteLine(response[1].MetaData.ToList()[2]);
+    }
+
+    private async Task HandleFileInput(InputFileChangeEventArgs e)
+    {
+        var file = e.GetMultipleFiles().FirstOrDefault();
+        if (file != null)
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream().ReadAsync(buffer);
+            var base64 = Convert.ToBase64String(buffer);
+            byte[] image = Convert.FromBase64String(base64);
+            var options = new Supabase.Storage.FileOptions
+                {
+                    Upsert = true,
+            };
+            await supabaseGlobal.Storage.From("images").Update(image, Id + ".webp", options );
+        }
+        Random = Guid.NewGuid().ToString();
+        StateHasChanged();
+    }
+}
